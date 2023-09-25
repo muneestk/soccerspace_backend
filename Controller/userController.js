@@ -2,6 +2,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs' ;
 import userModel from '../Modals/userModel.js';
 import nodemailer from 'nodemailer'
+import dotenv from "dotenv"
+dotenv.config()
 
 
 //----------SEND MAIL FOR VERIFICATION------------//
@@ -14,8 +16,8 @@ const sendMail = async(name,email,id) => {
             secure: false,
             requireTLS: true,
             auth:{
-                user: 'muneestk5017@gmail.com',
-                pass: 'aawppzrvkcxvauby'
+                user: process.env.EMAIL,
+                pass: process.env.PASS
             }
         })
         const mailOptions = {
@@ -111,6 +113,12 @@ export const userLogin = async(req,res,next) => {
       })
     }
 
+    if(userData.is_blocked){
+        return res.status(404).send({
+          message : "This app has been blocked by  administrator"
+        })
+      }
+
     if(!(await bcrypt.compare(password,userData.password))){
         return res.status(404).send({
             message:"Password is not correct"
@@ -118,7 +126,7 @@ export const userLogin = async(req,res,next) => {
     }
 
     if(userData.is_verified){
-        const token = jwt.sign({_id:userData._id},"userSecret")
+        const token = jwt.sign({_id:userData._id},process.env.USERSECRETKEY)
         res.json(token)
     }else{
         return res.status(404).send({
@@ -142,7 +150,7 @@ export const Verification = async(req,res,next)=>{
         const userdata = await userModel.findOne({_id:id});
         if(userdata){
             await userModel.updateOne({_id:id},{is_verified:true});
-            const token = jwt.sign({_id:userdata._id},"userSecret")
+            const token = jwt.sign({_id:userdata._id},process.env.USERSECRETKEY)
             res.json(token)
         }else{
             res.status(400).send({
@@ -156,4 +164,3 @@ export const Verification = async(req,res,next)=>{
     }
 }
 
-``

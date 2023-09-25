@@ -2,8 +2,9 @@
 import managerModel from "../Modals/managerModel.js"
 import bcrypt from "bcryptjs"
 import Jwt  from "jsonwebtoken"
-import userModel from "../Modals/userModel.js";
 import nodemailer from "nodemailer"
+import dotenv from "dotenv"
+dotenv.config()
 
 
 const sendMail = async(name,email,id) => {
@@ -21,8 +22,8 @@ const sendMail = async(name,email,id) => {
             secure: false,
             requireTLS: true,
             auth:{
-                user: 'muneestk5017@gmail.com',
-                pass: 'aawppzrvkcxvauby'
+                user: process.env.EMAIL,
+                pass: process.env.PASS
             }
         })
         const mailOptions = {
@@ -108,6 +109,12 @@ export const managerLogin = async(req,res,next) => {
             })
         }
 
+        if(managerData.is_blocked){
+            return res.status(400).json({
+                message:"This app has been blocked by  administrator"
+            })
+        }
+
         if(!(await bcrypt.compare(password,managerData.password))){
             return res.status(400).json({
                 message:"password is not correct"
@@ -115,15 +122,13 @@ export const managerLogin = async(req,res,next) => {
         }
 
         if(managerData.is_verified){
-            const token = Jwt.sign({_id:managerData._id},"managerSecret")
+            const token = Jwt.sign({_id:managerData._id},process.env.MANAGERSECRETKEY)
             res.json(token)
         }else{
             return res.status(400).json({
                 message:"you are not verified"
             })
         }
-
-       
         
     } catch (error) {
        next(error);
@@ -142,7 +147,7 @@ export const managerVerification = async(req,res,next)=>{
         const managerData = await managerModel.findOne({_id:id});
         if(otp==managerData.otp){
             await managerModel.updateOne({_id:id},{is_verified:true,otp:''});
-            const token = Jwt.sign({_id:managerData._id},"managerSecret")
+            const token = Jwt.sign({_id:managerData._id},process.env.MANAGERSECRETKEY)
             res.json(token)
         }else{
             res.status(400).send({
