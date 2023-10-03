@@ -9,9 +9,7 @@ export const userAuth = async (req,res,next) => {
     try {
         if (req.headers.authorisation){
             let token = req.headers.authorisation.split(' ')[1];
-            console.log(token);
             const decoded = jwt.verify(token,process.env.USERSECRETKEY)
-            console.log(decoded);
             const user = await userModel.findOne({ _id : decoded._id})
             if(user){
                 next()
@@ -37,9 +35,7 @@ export const adminAuth = async (req,res,next) => {
     try {
         if (req.headers.authorisation){
             let token = req.headers.authorisation.split(' ')[1];
-            console.log(token);
             const decoded = jwt.verify(token,process.env.ADMINSECRETKEY)
-            console.log(decoded);
             const admin = await userModel.findOne({ _id : decoded._id})
             if(admin){
                 next()
@@ -64,9 +60,7 @@ export const ManagerAuth = async (req,res,next) => {
     try {
         if (req.headers.authorisation){
             let token = req.headers.authorisation.split(' ')[1];
-            console.log(token);
             const decoded = jwt.verify(token,process.env.MANAGERSECRETKEY)
-            console.log(decoded);
             const manager = await managerModel.findOne({ _id : decoded._id})
             if(manager){
                 next()

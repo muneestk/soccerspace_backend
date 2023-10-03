@@ -14,7 +14,7 @@ const sendMail = async(name,email,id) => {
         for(let i=0;i<4;i++){
             otp+=digits[Math.floor(Math.random()*10)]
         }
-        console.log(otp);
+     
         const updateOtp = await managerModel.updateOne({_id:id},{$set:{otp:otp}});
         const transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
@@ -137,7 +137,7 @@ export const managerLogin = async(req,res,next) => {
 }
 
 
-//----------MANAGER LOGIN------------//
+//----------MANAGER OTP VERIFICATION------------//
 
 
 export const managerVerification = async(req,res,next)=>{
@@ -159,6 +159,53 @@ export const managerVerification = async(req,res,next)=>{
         console.log(error.message);
     }
 }
+
+//----------MANAGER  RESEND OTP ------------//
+
+export const resendOtp = async(req,res,next) =>{
+    try {
+        const {id} = req.query
+        const managerData = await managerModel.findById(id)
+        if(managerData){
+            sendMail(managerData.name,managerData.email,managerData._id)
+            return  res.json(managerData)
+        }else{
+            return res.status(400).send({
+                message:"try again"
+            }) 
+        }
+    } catch (error) {
+        next(error)
+        console.log(error.message);
+    }
+}
+
+//----------MANAGER PROFILE ------------//
+
+export const managerDetails = async(req,res,next) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        const claim = Jwt.verify(token,process.env.MANAGERSECRETKEY)
+        const managerId = claim._id       
+        const managerData = await managerModel.findById(managerId)
+        
+        if(managerData){
+            res.status(200).json(managerData)
+        }else{
+            res.status(400).json({
+                message : "something went wrong"
+            })
+        }
+
+    } catch (error) {
+        next(error)
+        console.log(error.message);
+    }
+}
+
+
+
+
 
 
 
