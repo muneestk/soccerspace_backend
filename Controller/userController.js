@@ -163,3 +163,58 @@ export const Verification = async(req,res,next)=>{
     }
 }
 
+//----------USER DETAILS------------//
+
+export const userDetails = async(req,res,next) =>{
+    try {
+      const token = req.headers.authorization?.split(' ')[1] ;
+      const claim = jwt.verify(token,process.env.USERSECRETKEY)
+
+      const id = claim._id
+      const userDetail = await userModel.findById(id)
+
+      if(userDetail){
+        return res.status(200).json(userDetail)
+      }else{
+        return res.status(400).json({
+            message : "something went wrong"
+        })
+      }
+        
+    } catch (error) {
+        next(err)
+        console.log(error.message);
+    }
+}
+
+
+//----------USER SAVE------------//
+
+export const userSave = async(req,res,next) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1] ;
+    const claim = jwt.verify(token,process.env.USERSECRETKEY)
+
+    const id = claim._id
+    
+    const userData = await userModel.updateOne(
+        { _id: id },
+        { $set: { name: req.body.name } }
+      );
+
+     if(userData){
+        res.status(200).json(userData)
+    }else{
+        res.status(400).json({
+            message : "something went wrong"
+        })
+    }
+    
+  } catch (error) {
+    next(error)
+    console.log(error.message);
+  }
+}
+
+
+

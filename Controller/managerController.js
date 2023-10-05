@@ -177,7 +177,7 @@ export const resendOtp = async(req,res,next) =>{
     } catch (error) {
         next(error)
         console.log(error.message);
-    }
+    }       
 }
 
 //----------MANAGER PROFILE ------------//
@@ -189,6 +189,36 @@ export const managerDetails = async(req,res,next) => {
         const managerId = claim._id       
         const managerData = await managerModel.findById(managerId)
         
+        if(managerData){
+            res.status(200).json(managerData)
+        }else{
+            res.status(400).json({
+                message : "something went wrong"
+            })
+        }
+
+    } catch (error) {
+        next(error)
+        console.log(error.message);
+    }
+}
+
+
+//----------MANAGER EDIT ------------//
+
+export const managerEdit = async(req,res,next) =>{
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        const claim = Jwt.verify(token,process.env.MANAGERSECRETKEY)
+        const managerId = claim._id 
+            
+        const managerData = await managerModel.updateOne(
+            { _id: managerId },
+            { $set: { name: req.body.name } }
+          );
+          
+          
+        console.log(managerData);
         if(managerData){
             res.status(200).json(managerData)
         }else{

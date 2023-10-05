@@ -7,11 +7,13 @@ dotenv.config()
 
 export const userAuth = async (req,res,next) => {
     try {
-        if (req.headers.authorisation){
-            let token = req.headers.authorisation.split(' ')[1];
+
+        if (req.headers.authorization){
+            let token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token,process.env.USERSECRETKEY)
             const user = await userModel.findOne({ _id : decoded._id})
             if(user){
+                
                 next()
             }else{
                 return res.status(400).json({
@@ -33,8 +35,8 @@ export const userAuth = async (req,res,next) => {
 
 export const adminAuth = async (req,res,next) => {
     try {
-        if (req.headers.authorisation){
-            let token = req.headers.authorisation.split(' ')[1];
+        if (req.headers.authorization){
+            let token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token,process.env.ADMINSECRETKEY)
             const admin = await userModel.findOne({ _id : decoded._id})
             if(admin){
@@ -58,8 +60,8 @@ export const adminAuth = async (req,res,next) => {
 
 export const ManagerAuth = async (req,res,next) => {
     try {
-        if (req.headers.authorisation){
-            let token = req.headers.authorisation.split(' ')[1];
+        if (req.headers.authorization){
+            let token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token,process.env.MANAGERSECRETKEY)
             const manager = await managerModel.findOne({ _id : decoded._id})
             if(manager){
