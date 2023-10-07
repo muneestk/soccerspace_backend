@@ -1,5 +1,6 @@
 
 import managerModel from "../Modals/managerModel.js"
+import tournamentModel from "../Modals/tournamentModel.js"
 import bcrypt from "bcryptjs"
 import Jwt  from "jsonwebtoken"
 import nodemailer from "nodemailer"
@@ -218,8 +219,7 @@ export const managerEdit = async(req,res,next) =>{
           );
           
           
-        console.log(managerData);
-        if(managerData){
+            if(managerData){
             res.status(200).json(managerData)
         }else{
             res.status(400).json({
@@ -233,7 +233,56 @@ export const managerEdit = async(req,res,next) =>{
     }
 }
 
+//----------ADD TOURNAMENT ------------//
 
+export const addTournment = async(req,res,next) =>{
+    try {
+
+        const token = req.headers.authorization?.split(' ')[1];
+        const claim = Jwt.verify(token,process.env.MANAGERSECRETKEY)
+        const managerId = claim._id 
+        console.log(req.body);
+        const {tournamentName,TeamName,mobileNo,winnersPriceMoney,runnersPriceMoney,tournamentDate,slots,limit,location } = req.body
+
+        const posterFile = req.files['posterImage'][0];
+        const logoFile = req.files['logoImage'][0];
+
+        const tournament = new tournamentModel({
+            tournamentName : tournamentName,
+            teamName : TeamName,
+            location : location,
+            mobileNo : mobileNo,
+            winnersPriceMoney : winnersPriceMoney,
+            runnersPriceMoney : runnersPriceMoney,
+            tournamentDate : tournamentDate,
+            slots : slots,
+            limit : limit,
+            logoImage : logoFile.filename,
+            posterImage : posterFile.filename,
+            managerId : managerId
+
+        })
+
+        const tournamentData = await tournament.save()
+
+        if(tournamentData){
+            res.status(200).json({
+                message: "Tournament created successfully. Please wait for admin approval."
+              });
+              
+        }else{
+            res.status(400).json({
+                message:"something went wrong"
+            })
+        }
+
+        
+         
+    } catch (error) {
+        next(error)
+        console.log(error.message);
+    }       
+}
 
 
 

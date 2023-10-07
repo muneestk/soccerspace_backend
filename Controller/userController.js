@@ -143,7 +143,8 @@ export const userLogin = async(req,res,next) => {
 
 //----------USER VERIFICATION------------//
 
-export const Verification = async(req,res,next)=>{
+export const 
+Verification = async(req,res,next)=>{
     try {
         const id = req.query.id;
         const userdata = await userModel.findOne({_id:id});
