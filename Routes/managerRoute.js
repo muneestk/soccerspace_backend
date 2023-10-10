@@ -2,11 +2,11 @@ import express from 'express';
 import { managerLogin, managerRegister, managerVerification, resendOtp, managerDetails, managerEdit, addTournment } from '../Controller/managerController.js';
 import { ManagerAuth } from '../middleware/Auth.js';
 import multer from 'multer';
-import { fileURLToPath } from 'url'; // Import the 'fileURLToPath' function
+import { fileURLToPath } from 'url';
 import path from 'path';
 
-const __filename = fileURLToPath(import.meta.url); // Get the current module's filename
-const __dirname = path.dirname(__filename); // Get the directory name
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname = path.dirname(__filename); 
 
 const managerRoute = express();
 
@@ -23,7 +23,7 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 1024 * 1024 * 10, // Set the maximum file size (e.g., 10MB)
+        fileSize: 1024 * 1024 * 10, 
     },
     fileFilter: (req, file, cb) => {
         if (
@@ -40,12 +40,22 @@ const upload = multer({
     },
 });
 
+managerRoute.use((err, req, res, next) => {
+    if (err instanceof multer.MulterError) {
+      res.status(400).json({ error: 'File upload error: ' + err.message });
+    } else if (err) {
+      res.status(500).json({ error: 'Internal server error' });
+    } else {
+      next();
+    }
+  });
+
 managerRoute.post('/register', managerRegister);
 managerRoute.post('/login', managerLogin);
 managerRoute.post('/verification', managerVerification);
 managerRoute.post('/resendOtp', resendOtp);
-managerRoute.post('/addTournment', upload.fields([{ name: 'logoImage' }, { name: 'posterImage' }]), addTournment);
-managerRoute.get('/managerDetails', managerDetails);
-managerRoute.patch('/saveManager', managerEdit);
+managerRoute.post('/addTournment',ManagerAuth, upload.fields([{ name: 'logoImage' }, { name: 'posterImage' }]), addTournment);
+managerRoute.get('/managerDetails',ManagerAuth, managerDetails);
+managerRoute.patch('/saveManager',ManagerAuth, managerEdit);
 
 export default managerRoute;

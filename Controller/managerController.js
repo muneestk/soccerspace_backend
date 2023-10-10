@@ -241,8 +241,7 @@ export const addTournment = async(req,res,next) =>{
         const token = req.headers.authorization?.split(' ')[1];
         const claim = Jwt.verify(token,process.env.MANAGERSECRETKEY)
         const managerId = claim._id 
-        console.log(req.body);
-        const {tournamentName,TeamName,mobileNo,winnersPriceMoney,runnersPriceMoney,tournamentDate,slots,limit,location } = req.body
+        const {tournamentName,TeamName,mobileNo,winnersPriceMoney,runnersPriceMoney,tournamentDate,slots,players,limit,location,registerFee } = req.body
 
         const posterFile = req.files['posterImage'][0];
         const logoFile = req.files['logoImage'][0];
@@ -254,9 +253,11 @@ export const addTournment = async(req,res,next) =>{
             mobileNo : mobileNo,
             winnersPriceMoney : winnersPriceMoney,
             runnersPriceMoney : runnersPriceMoney,
+            registerFee : registerFee,
             tournamentDate : tournamentDate,
             slots : slots,
             limit : limit,
+            players : players,
             logoImage : logoFile.filename,
             posterImage : posterFile.filename,
             managerId : managerId

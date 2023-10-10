@@ -3,6 +3,7 @@ import managerModal from '../Modals/managerModel.js'
 import bcrypt from 'bcryptjs';
 import  Jwt  from 'jsonwebtoken';
 import dotenv from "dotenv"
+import tournamentModel from '../Modals/tournamentModel.js';
 dotenv.config()
 
 
@@ -70,12 +71,25 @@ export const managerList = async(req,res,next) => {
     }
 }
 
+   
+//----------TOURNAMENTS LIST FETCHING------------//
+
+export const tournamentList = async(req,res,next) => {
+    try {
+        const tournamentData = await tournamentModel.find()
+        res.json(tournamentData)
+    } catch (error) {
+        next(error)
+      console.log(error.message);  
+    }
+}
+
+
   
 //-----------BLOCKING USER------------//
 
 export const blockUser = async(req,res,next) => {
     try {
-        console.log('block');
         const { id } = req.body
         const updatedUser = await userModal.updateOne(
             { _id: id },
@@ -166,5 +180,50 @@ export const unBlockManager = async(req,res,next) => {
     } catch (error) {
         next(error)
       console.log(error.message);  
+    }
+}
+
+
+//-----------APPROVING TOURNAMENT------------//
+
+export const approveTournament = async(req,res,next) =>{
+    try {
+
+        const { id } = req.body
+        const upateTournament = await tournamentModel.updateOne({_id:id},{$set:{is_approuve:"approved"}})
+        if(upateTournament){
+            res.status(200).json(upateTournament)
+        }else{
+            res.status(400).json({
+                message:"something went wrong"
+            })
+        }
+        
+    } catch (error) {
+        next(error)
+        console.log(error.message); 
+    }
+}
+
+
+//-----------REJECTING TOURNAMENT------------//
+
+export const rejectTournament = async(req,res,next) => {
+    try {
+        const {id,reason} = req.body
+        console.log(req.body);
+        const updateTournament = await tournamentModel.updateOne({_id:id},{$set:{is_approuve:"rejected",resonReject:reason}})
+        if(updateTournament){
+            res.json(updateTournament)
+        }else{
+            res.status(400).json({
+                message:"something went wrong"
+            })
+        }
+       
+        
+    } catch (error) {
+        next(error)
+        console.log(error.message);
     }
 }

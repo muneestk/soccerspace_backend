@@ -20,11 +20,15 @@ const tournamentScheema = await mongoose.Schema({
         type:Number,
         required:true
     },
-    winnersPriceMoney:{
+    registerFee:{
         type:Number,
         required:true
     },
     winnersPriceMoney:{
+        type:Number,
+        required:true
+    },
+    runnersPriceMoney:{
         type:Number,
         required:true
     },
@@ -37,6 +41,10 @@ const tournamentScheema = await mongoose.Schema({
         required:true
     },
     limit:{
+        type:String,
+        required:true
+    },
+    players:{
         type:String,
         required:true
     },
@@ -58,8 +66,11 @@ const tournamentScheema = await mongoose.Schema({
         required:true
     },
     is_approuve:{
-        type:Boolean,
-        default:false
+        type:String,
+        default:"waiting"
+    },
+    resonReject:{
+        type:String,
     },
     registeredDate: {
         type: Date,
