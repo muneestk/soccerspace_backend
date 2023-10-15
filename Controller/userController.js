@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs' ;
 import userModel from '../Modals/userModel.js';
 import nodemailer from 'nodemailer'
 import dotenv from "dotenv"
+import teamModel from '../Modals/teamModel.js';
 dotenv.config()
 
 
@@ -97,6 +98,50 @@ export const userRegister = async(req,res,next) =>{
     }
 }
 
+
+
+
+//---------- USER GOOGLE SIGNUP REGISTER ------------//
+
+export const googleRegister = async(req,res,next) =>{
+
+    try{
+        const {name,email,id} = req.body ;
+        console.log(req.body);
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(id,salt);
+         const exist = await userModel.findOne({email:email})
+         
+        if(exist){
+            await userModel.updateOne({email:email},{is_google_signup:true})
+            const token = jwt.sign({_id:exist._id},process.env.USERSECRETKEY)
+            res.json(token)
+        }else{
+            const user = new userModel({
+                name : name ,
+                email : email ,
+                password : hashedPassword,
+                is_google_signup : true
+            })
+
+            const result = await user.save();
+
+            if(result){
+                const token = jwt.sign({_id:result._id},process.env.USERSECRETKEY)
+                res.json(token)
+            }else{
+                res.status(400).send({
+                    message:"Can't registered, Something went wrong"
+                })
+            }
+        }
+        
+    }catch(err){
+       next(err)
+       console.log(err.message);
+    }
+}
+
 //----------USER LOGIN------------//
 
 export const userLogin = async(req,res,next) => {
@@ -143,8 +188,7 @@ export const userLogin = async(req,res,next) => {
 
 //----------USER VERIFICATION------------//
 
-export const 
-Verification = async(req,res,next)=>{
+export const Verification = async(req,res,next)=>{
     try {
         const id = req.query.id;
         const userdata = await userModel.findOne({_id:id});
@@ -217,5 +261,46 @@ export const userSave = async(req,res,next) => {
   }
 }
 
+
+
+//----------USER REGISTER------------//
+
+export const teamRegister = async(req,res,next) => {
+    try {
+      const token = req.headers.authorization?.split(' ')[1] ;
+      const claim = jwt.verify(token,process.env.USERSECRETKEY)
+      const id = claim._id
+      const logoFile = req.file.filename
+
+      const { teamName,managerName,location,phno,phno2,tournamentId } = req.body
+      
+      const teamData = new teamModel({
+
+            teamName,managerName,
+            teamLocation : location,
+            mobNo : phno,
+            altMobNo : phno2,
+            userId : id,
+            tournamentId ,
+            teamLogo:logoFile
+
+      })
+
+      const saveData = await teamData.save()
+
+       if(saveData){
+          res.status(200).json(saveData)
+      }else{
+          res.status(400).json({
+              message : "something went wrong"
+          })
+      }
+      
+    } catch (error) {
+      next(error)
+      console.log(error.message);
+    }
+  }
+  
 
 

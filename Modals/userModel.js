@@ -19,6 +19,10 @@ export const userSchema = new mongoose.Schema({
         type:Boolean,
         default:false
     },
+    is_google_signup:{
+        type:Boolean,
+        default:false
+    },
     is_admin:{
         type:Boolean,
         default:false

@@ -189,7 +189,7 @@ export const managerDetails = async(req,res,next) => {
         const claim = Jwt.verify(token,process.env.MANAGERSECRETKEY)
         const managerId = claim._id       
         const managerData = await managerModel.findById(managerId)
-        
+    
         if(managerData){
             res.status(200).json(managerData)
         }else{
@@ -209,6 +209,7 @@ export const managerDetails = async(req,res,next) => {
 
 export const managerEdit = async(req,res,next) =>{
     try {
+
         const token = req.headers.authorization?.split(' ')[1];
         const claim = Jwt.verify(token,process.env.MANAGERSECRETKEY)
         const managerId = claim._id 
@@ -217,9 +218,8 @@ export const managerEdit = async(req,res,next) =>{
             { _id: managerId },
             { $set: { name: req.body.name } }
           );
-          
-          
-            if(managerData){
+            
+        if(managerData){
             res.status(200).json(managerData)
         }else{
             res.status(400).json({
@@ -241,7 +241,7 @@ export const addTournment = async(req,res,next) =>{
         const token = req.headers.authorization?.split(' ')[1];
         const claim = Jwt.verify(token,process.env.MANAGERSECRETKEY)
         const managerId = claim._id 
-        const {tournamentName,TeamName,mobileNo,winnersPriceMoney,runnersPriceMoney,tournamentDate,slots,players,limit,location,registerFee } = req.body
+        const { tournamentName,TeamName,mobileNo,winnersPriceMoney,runnersPriceMoney,tournamentDate,slots,players,limit,location,registerFee } = req.body
 
         const posterFile = req.files['posterImage'][0];
         const logoFile = req.files['logoImage'][0];
@@ -263,14 +263,12 @@ export const addTournment = async(req,res,next) =>{
             managerId : managerId
 
         })
-
         const tournamentData = await tournament.save()
 
         if(tournamentData){
             res.status(200).json({
                 message: "Tournament created successfully. Please wait for admin approval."
-              });
-              
+              });       
         }else{
             res.status(400).json({
                 message:"something went wrong"

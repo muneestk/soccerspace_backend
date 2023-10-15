@@ -35,6 +35,7 @@ export const userAuth = async (req,res,next) => {
 
 export const adminAuth = async (req,res,next) => {
     try {
+        
         if (req.headers.authorization){
             let token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token,process.env.ADMINSECRETKEY)
