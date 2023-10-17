@@ -1,5 +1,5 @@
 import express from 'express';
-import { managerLogin, managerRegister, managerVerification, resendOtp, managerDetails, managerEdit, addTournment } from '../Controller/managerController.js';
+import { managerLogin, managerRegister, managerVerification, resendOtp, managerDetails, managerEdit, addTournment, forgotMailSentManager } from '../Controller/managerController.js';
 import { ManagerAuth } from '../middleware/Auth.js';
 import multer from 'multer';
 import { fileURLToPath } from 'url';
@@ -50,6 +50,8 @@ managerRoute.use((err, req, res, next) => {
     }
   });
 
+managerRoute.post('/forgotMailSent',forgotMailSentManager)
+managerRoute.post('/reVerifyAccount',forgotMailSentManager)
 managerRoute.post('/register', managerRegister);
 managerRoute.post('/login', managerLogin);
 managerRoute.post('/verification', managerVerification);
