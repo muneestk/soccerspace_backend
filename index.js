@@ -41,6 +41,6 @@ mongoose.connect(process.env.MONGO, {
 });
 
 
-const server = http.listen(process.env.PORT,()=>{
+ http.listen(process.env.PORT,()=>{
     console.log("Server started listening to port");
 });

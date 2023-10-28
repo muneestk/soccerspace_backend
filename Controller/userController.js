@@ -6,17 +6,18 @@ import dotenv from "dotenv";
 import teamModel from "../Modals/teamModel.js";
 import tournamentModel from "../Modals/tournamentModel.js";
 import Randomstring from "randomstring";
+import cron from "node-cron";
+import fixtureModel from "../Modals/fixtureModel.js";
 
 dotenv.config();
 
 //----------SEND MAIL FOR VERIFICATION------------//
 
-const sendMail = async (name, email, id, purpose,token) => {
+const sendMail = async (name, email, id, purpose, token) => {
   try {
     let content;
-    console.log(purpose);
     if (purpose == "user verification") {
-        console.log('object');
+      console.log("object");
       content = ` <html>
             <body>
                 <h1>Soccer Space Account Verification</h1>
@@ -36,7 +37,7 @@ const sendMail = async (name, email, id, purpose,token) => {
             </body>
         </html> `;
     } else {
-        content= ` <html>
+      content = ` <html>
             <body>
                 <h1>Soccer Space Account Forgot Password Verification</h1>
                 <p>Hi ${name},</p>
@@ -54,7 +55,6 @@ const sendMail = async (name, email, id, purpose,token) => {
                 <p>If you have any questions or need assistance, please contact our support team.</p>
             </body>
         </html> `;
-        
     }
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -70,7 +70,7 @@ const sendMail = async (name, email, id, purpose,token) => {
       from: "SOCCER SPACE",
       to: email,
       subject: "For verification mail",
-      html:content,
+      html: content,
     };
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
@@ -203,14 +203,13 @@ export const userLogin = async (req, res, next) => {
 
 export const Verification = async (req, res, next) => {
   try {
-    
-    const {token,id} = req.body;
-    const tokenCheck = await userModel.findOne({token:token})
+    const { token, id } = req.body;
+    const tokenCheck = await userModel.findOne({ token: token });
 
-    if(!tokenCheck){
-      return  res.status(400).json({
-          message:"Time expired try again"
-      }) 
+    if (!tokenCheck) {
+      return res.status(400).json({
+        message: "Time expired try again",
+      });
     }
 
     const userdata = await userModel.findOne({ _id: id });
@@ -232,29 +231,34 @@ export const Verification = async (req, res, next) => {
 //----------USER REVERIFICATION MAIL SENT------------//
 
 export const reverificationMailSent = async (req, res, next) => {
-    try {
-        
-      const {email}= req.body
-      const userdata = await userModel.findOne({ email: email });
-      
-      if (userdata) {
-        const token = Randomstring.generate()
-        await userModel.updateOne({email:email},{$set:{token:token}})
-        sendMail(userdata.name, userdata.email, userdata._id, "user verification",token);
-        setTimeout(async () => {
-            await userModel.updateOne({email:email},{$set:{token:''}})
-        }, 120000);
-        res.json(userdata);
-      } else {
-        res.status(400).send({
-          message: "something went wrong",
-        });
-      }
-    } catch (error) {
-      next(error);
-      console.log(error.message);
+  try {
+    const { email } = req.body;
+    const userdata = await userModel.findOne({ email: email });
+
+    if (userdata) {
+      const token = Randomstring.generate();
+      await userModel.updateOne({ email: email }, { $set: { token: token } });
+      sendMail(
+        userdata.name,
+        userdata.email,
+        userdata._id,
+        "user verification",
+        token
+      );
+      setTimeout(async () => {
+        await userModel.updateOne({ email: email }, { $set: { token: "" } });
+      }, 120000);
+      res.json(userdata);
+    } else {
+      res.status(400).send({
+        message: "something went wrong",
+      });
     }
-  };
+  } catch (error) {
+    next(error);
+    console.log(error.message);
+  }
+};
 
 //---------- USER FORGOT PASSWORD SENT MAIL ------------//
 
@@ -262,20 +266,26 @@ export const forgotMailSent = async (req, res, next) => {
   try {
     const { email } = req.body;
     const userData = await userModel.findOne({ email: email });
-    const token = Randomstring.generate()
-    await userModel.updateOne({email:email},{$set:{token:token}})
-    if(userData){
-        sendMail(userData.name,userData.email,userData._id,"forgot password",token)
-        setTimeout(async () => {
-            await userModel.updateOne({email:email},{$set:{token:''}})
-        }, 120000);
-        res.status(200).json({
-            message:"Check your email"
-        })
-    }else{
-        res.status(400).json({
-            message:"something went wrong"
-        }) 
+    const token = Randomstring.generate();
+    await userModel.updateOne({ email: email }, { $set: { token: token } });
+    if (userData) {
+      sendMail(
+        userData.name,
+        userData.email,
+        userData._id,
+        "forgot password",
+        token
+      );
+      setTimeout(async () => {
+        await userModel.updateOne({ email: email }, { $set: { token: "" } });
+      }, 120000);
+      res.status(200).json({
+        message: "Check your email",
+      });
+    } else {
+      res.status(400).json({
+        message: "something went wrong",
+      });
     }
   } catch (error) {
     next(error);
@@ -286,33 +296,36 @@ export const forgotMailSent = async (req, res, next) => {
 //----------USER FORGOT PASSWORD------------//
 
 export const forgotPassword = async (req, res, next) => {
-    try {
-      const { password,id,token } = req.body;
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+  try {
+    const { password, id, token } = req.body;
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-      const tokenCheck = await userModel.findOne({token:token})
-      if(!tokenCheck){
-        return  res.status(400).json({
-            message:"Time expired try again"
-        }) 
-      }
-
-      const userData = await userModel.updateOne({_id:id},{$set:{password:hashedPassword}})
-      if(userData){
-          res.status(200).json({
-              message:"password changed succesfully"
-          })
-      }else{
-          res.status(400).json({
-              message:"something went wrong"
-          }) 
-      }
-    } catch (error) {
-      next(error);
-      console.log(error.message);
+    const tokenCheck = await userModel.findOne({ token: token });
+    if (!tokenCheck) {
+      return res.status(400).json({
+        message: "Time expired try again",
+      });
     }
-  };
+
+    const userData = await userModel.updateOne(
+      { _id: id },
+      { $set: { password: hashedPassword } }
+    );
+    if (userData) {
+      res.status(200).json({
+        message: "password changed succesfully",
+      });
+    } else {
+      res.status(400).json({
+        message: "something went wrong",
+      });
+    }
+  } catch (error) {
+    next(error);
+    console.log(error.message);
+  }
+};
 
 //----------USER DETAILS------------//
 
@@ -376,15 +389,23 @@ export const teamRegister = async (req, res, next) => {
       req.body;
 
     const tournamentData = await tournamentModel.findById(tournamentId);
+
     if (tournamentData.maxRegLimit > 3) {
       return res.status(400).json({
         message: "Only register maximum 3 teams in this tournament",
       });
     }
 
+    if (tournamentData.limit > tournamentData.Teams.length) {
+      return res.status(400).json({
+        message: "sorry tournament slot is full",
+      });
+    }
+
     const checkTeam = await teamModel.findOne({
       teamName: teamName,
       managerName: managerName,
+      tournamentId: tournamentId,
     });
     if (checkTeam) {
       return res.status(400).json({
@@ -406,10 +427,6 @@ export const teamRegister = async (req, res, next) => {
     const saveData = await teamData.save();
 
     if (saveData) {
-      await tournamentModel.updateOne(
-        { _id: tournamentId },
-        { $inc: { maxRegLimit: 1 } }
-      );
       res.status(200).json(saveData);
     } else {
       res.status(400).json({
@@ -433,10 +450,17 @@ export const verifyPayment = async (req, res, next) => {
     } = req.body;
 
     if (razorpay_payment_id) {
-      await tournamentModel.updateOne(
-        { _id: trnmntId },
-        { $set: { Teams: teamId } }
-      );
+      await Promise.all([
+        tournamentModel.updateOne(
+          { _id: trnmntId },
+          { $push: { Teams: teamId } }
+        ),
+        tournamentModel.updateOne(
+          { _id: trnmntId },
+          { $inc: { maxRegLimit: 1 } }
+        ),
+      ]);
+
       await teamModel.updateOne(
         { _id: teamId },
         { $set: { paymentStatus: "success" } }
@@ -444,6 +468,30 @@ export const verifyPayment = async (req, res, next) => {
       res.status(200).json({
         message: "success",
       });
+
+      const tournamentData = await tournamentModel.findById(trnmntId);
+
+      if (tournamentData.slots === tournamentData.Teams.length) {
+        const matchRound = Math.log2(tournamentData.slots);
+        const matches = [];
+
+        for (let i = 0; i < tournamentData.Teams.length; i += 2) {
+          const match = {
+            team1Id: tournamentData.Teams[i]._id,
+            team2Id: tournamentData.Teams[i + 1]._id,
+          };
+          matches.push(match);
+        }
+
+        const updateFixture = new fixtureModel({
+          tournamentId: trnmntId,
+          managerId: tournamentData.managerId,
+          matchRound,
+          matches: matches,
+        });
+
+        await updateFixture.save();
+      }
     } else {
       await teamModel.updateOne(
         { _id: teamId },
@@ -458,3 +506,227 @@ export const verifyPayment = async (req, res, next) => {
     console.log(error.message);
   }
 };
+
+//-------- MY TOURNAMENTS FETCHING ------//
+
+export const myTournaments = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    const claim = jwt.verify(token, process.env.USERSECRETKEY);
+    const id = claim._id;
+    await teamModel.deleteMany({ paymentStatus: "pending" });
+    const findTeams = await teamModel.find({ userId: id });
+    const teamIds = findTeams.map((team) => team._id);
+    const findTournaments = await tournamentModel
+      .find({ Teams: { $in: teamIds } })
+      .populate("Teams")
+      .sort({ tournamentDate: 1 });
+
+    if (findTournaments) {
+      res.status(200).json(findTournaments);
+    } else {
+      res.status(400).json({
+        message: "something went wrong",
+      });
+    }
+  } catch (error) {
+    next(error);
+    console.log(error.message);
+  }
+};
+
+//-------- MY TOURNAMENTS TEAMS FETCHING ------//
+
+export const myTournamentsTeams = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    const claim = jwt.verify(token, process.env.USERSECRETKEY);
+    const userId = claim._id;
+    const { id } = req.query;
+
+    const tournamentData = await tournamentModel.findById(id);
+    const teamIds = tournamentData.Teams.map((team) => team._id);
+    const teamsData = await teamModel
+      .find({ _id: { $in: teamIds }, userId: userId })
+      .populate("tournamentId");
+
+    if (teamsData) {
+      res.status(200).json(teamsData);
+    } else {
+      res.status(400).json({
+        message: "something went wrong",
+      });
+    }
+  } catch (error) {
+    next(error);
+    console.log(error.message);
+  }
+};
+
+//----------TOURNAMENT DETAILS------------//
+
+export const tournamentData = async (req, res, next) => {
+  try {
+    const { limit, currentPage } = req.query;
+
+    const today = new Date();
+    const parsedLimit = parseInt(limit, 10);
+    const parsedCurrentPage = parseInt(currentPage, 10);
+
+    const skipAmount = (parsedCurrentPage - 1) * parsedLimit;
+
+    const tournamentDetails = await tournamentModel
+      .find({ tournamentDate: { $gte: today }, is_approuve: "approved" })
+      .skip(skipAmount)
+      .limit(parsedLimit);
+
+    if (tournamentDetails) {
+      const totalCount = await tournamentModel.countDocuments({
+        tournamentDate: { $gte: today },
+        is_approuve: "approved",
+      });
+
+      const totalPages = Math.ceil(totalCount / parsedLimit);
+
+      return res.status(200).json({
+        tournaments: tournamentDetails,
+        totalPages: totalPages,
+      });
+    } else {
+      return res.status(400).json({
+        message: "Something went wrong",
+      });
+    }
+  } catch (error) {
+    next(error);
+    console.log(error.message);
+  }
+};
+
+//----------TOURNAMENT SEARCH------------//
+
+export const Searchtournament = async (req, res, next) => {
+  try {
+    const { search, limit, currentPage } = req.query;
+    const today = new Date();
+
+    const skipAmount = (currentPage - 1) * limit;
+
+    const tournamentDetails = await tournamentModel
+      .find({
+        tournamentDate: { $gte: today },
+        is_approuve: "approved",
+        tournamentName: { $regex: search, $options: "i" },
+      })
+      .limit(limit)
+      .skip(skipAmount);
+
+    if (tournamentDetails) {
+      const totalCount = await tournamentModel.countDocuments({
+        tournamentDate: { $gte: today },
+        is_approuve: "approved",
+        tournamentName: { $regex: search, $options: "i" },
+      });
+
+      const totalPages = Math.ceil(totalCount / limit);
+
+      return res.status(200).json({
+        tournaments: tournamentDetails,
+        totalPages: totalPages,
+      });
+    } else {
+      return res.status(400).json({
+        message: "something went wrong",
+      });
+    }
+  } catch (error) {
+    next(error);
+    console.log(error.message);
+  }
+};
+
+//----------TOURNAMENT FILTER------------//
+
+export const filtertournament = async (req, res, next) => {
+  try {
+    const { value, limit, currentPage, catogory, startValue, endValue } =
+      req.query;
+    const today = new Date();
+    const skipAmount = (currentPage - 1) * limit;
+
+    let query = {
+      tournamentDate: { $gte: today },
+      is_approuve: "approved",
+    };
+
+    if (startValue > 500 || endValue < 5000) {
+      query.registerFee = { $gte: startValue, $lte: endValue };
+    }
+
+    if (value) {
+      query.players = value;
+    }
+
+    if (catogory) {
+      query.limit = catogory;
+    }
+
+    console.log(query);
+
+    const tournamentDetails = await tournamentModel
+      .find(query)
+      .limit(+limit)
+      .skip(+skipAmount);
+
+    if (tournamentDetails) {
+      const totalCount = await tournamentModel.countDocuments(query);
+      const totalPages = Math.ceil(totalCount / +limit);
+
+      return res.status(200).json({
+        tournaments: tournamentDetails,
+        totalPages: totalPages,
+      });
+    } else {
+      return res.status(400).json({
+        message: "something went wrong",
+      });
+    }
+  } catch (error) {
+    next(error);
+    console.log(error.message);
+  }
+};
+
+//----------AUTOMATICALY UPDATE TOURNAMENT STAUS------------//
+
+const updateStatus = async () => {
+  const currentDate = new Date();
+  const documents = await tournamentModel.find({});
+
+  documents.forEach(async (document) => {
+    if (document.tournamentDate < currentDate) {
+      await tournamentModel.updateOne(
+        { _id: document._id },
+        { $set: { status: "completed" } }
+      );
+    } else if (
+      document.tournamentDate.toISOString().slice(0, 10) ===
+      currentDate.toISOString().slice(0, 10)
+    ) {
+      await tournamentModel.updateOne(
+        { _id: document._id },
+        { $set: { status: "today" } }
+      );
+    } else {
+      await tournamentModel.updateOne(
+        { _id: document._id },
+        { $set: { status: "upcoming" } }
+      );
+    }
+  });
+  console.log("Status updated successfully");
+};
+
+cron.schedule("0 */5 * * *", () => {
+  updateStatus();
+});

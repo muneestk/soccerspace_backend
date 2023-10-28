@@ -33,11 +33,9 @@ export const userSchema = new mongoose.Schema({
     },
     otp:{
         type:String,
-        default:''
     },
     token:{
         type:String,
-        default:''
     },
     
 })

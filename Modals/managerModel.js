@@ -25,11 +25,9 @@ const managerScheema = await mongoose.Schema({
     },
     otp:{
         type:String,
-        default:''
     },
     token:{
         type:String,
-        default:''
     },
 })
 

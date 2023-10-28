@@ -86,6 +86,52 @@ export const tournamentList = async(req,res,next) => {
 
 
   
+//----------LOAD DASHBOARD LIST FETCHING------------//
+
+export const loadDashBoard = async (req, res, next) => {
+    try {
+        const tournamentData = await tournamentModel.find({ is_approuve: 'approved' });
+
+        const eightWeeksAgo = new Date();
+        eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56); // 8 weeks * 7 days
+
+        const today = new Date();
+
+        const weeklySales = await tournamentModel.aggregate([
+            {
+                $match: {
+                    is_approuve: 'approved',
+                    registeredDate: { $gte: eightWeeksAgo, $lte: today },
+                },
+            },
+            {
+                $group: {
+                    _id: {
+                        $week: '$registeredDate',
+                    },
+                    totalFee: { $sum: { $multiply: ['$registerFee', { $size: '$Teams' }] } },
+                },
+            },
+            {
+                $project: {
+                    week: { $concat: ['week', { $toString: '$_id' }] },
+                    totalFee: 1,
+                    _id: 0,
+                },
+            },
+            
+        ]);
+
+
+        res.status(200).json(weeklySales);
+    } catch (error) {
+        next(error);
+        console.log(error.message);
+    }
+};
+
+
+  
 //-----------BLOCKING USER------------//
 
 export const blockUser = async(req,res,next) => {
@@ -211,7 +257,6 @@ export const approveTournament = async(req,res,next) =>{
 export const rejectTournament = async(req,res,next) => {
     try {
         const {id,reason} = req.body
-        console.log(req.body);
         const updateTournament = await tournamentModel.updateOne({_id:id},{$set:{is_approuve:"rejected",resonReject:reason}})
         if(updateTournament){
             res.json(updateTournament)

@@ -1,9 +1,10 @@
 import express from 'express';
-import { managerLogin, managerRegister, managerVerification, resendOtp, managerDetails, managerEdit, addTournment, forgotMailSentManager } from '../Controller/managerController.js';
+import { managerLogin, managerRegister, managerVerification, resendOtp, managerDetails, managerEdit, addTournment, forgotMailSentManager, managerId, registerTeams} from '../Controller/managerController.js';
 import { ManagerAuth } from '../middleware/Auth.js';
 import multer from 'multer';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { fixtureFetching, roundUpdate, scoreUpdate } from '../Controller/fixtureController.js';
 
 const __filename = fileURLToPath(import.meta.url); 
 const __dirname = path.dirname(__filename); 
@@ -57,7 +58,14 @@ managerRoute.post('/login', managerLogin);
 managerRoute.post('/verification', managerVerification);
 managerRoute.post('/resendOtp', resendOtp);
 managerRoute.post('/addTournment',ManagerAuth, upload.fields([{ name: 'logoImage' }, { name: 'posterImage' }]), addTournment);
+
 managerRoute.get('/managerDetails',ManagerAuth, managerDetails);
+managerRoute.get('/findManger',ManagerAuth, managerId);
+managerRoute.get('/getFixture',ManagerAuth, fixtureFetching);
+managerRoute.get('/registeredTeams',ManagerAuth, registerTeams);
+
 managerRoute.patch('/saveManager',ManagerAuth, managerEdit);
+managerRoute.patch('/updateScore',ManagerAuth, scoreUpdate);
+managerRoute.post('/updateRound',ManagerAuth, roundUpdate);
 
 export default managerRoute;
