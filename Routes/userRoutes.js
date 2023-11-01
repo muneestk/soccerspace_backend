@@ -1,7 +1,7 @@
 import express from 'express';
 const userRoute = express();
 import { userAuth } from '../middleware/Auth.js';
-import { userRegister, userLogin, Verification, userDetails, userSave, googleRegister, teamRegister, verifyPayment, forgotMailSent, forgotPassword, reverificationMailSent } from '../Controller/userController.js'; 
+import { userRegister, userLogin, Verification, userDetails, userSave, googleRegister, teamRegister, verifyPayment, forgotMailSent, forgotPassword, reverificationMailSent, myTournaments, myTournamentsTeams, tournamentData, Searchtournament, filtertournament } from '../Controller/userController.js'; 
 import { upload } from '../middleware/multer.js';
 
 userRoute.use((err, req, res, next) => {
@@ -31,5 +31,10 @@ userRoute.patch('/forgotPassword',forgotPassword)
 
 
 userRoute.get('/userDetails', userAuth, userDetails)
+userRoute.get('/allTournaments', userAuth, tournamentData)
+userRoute.get('/myTournaments', userAuth, myTournaments)
+userRoute.get('/myTournamentsTeams', userAuth, myTournamentsTeams)
+userRoute.get('/searchTournaments', userAuth, Searchtournament)
+userRoute.get('/filterPlayers', userAuth, filtertournament)
 
 export default userRoute

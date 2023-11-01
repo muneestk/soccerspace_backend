@@ -5,6 +5,7 @@ import Jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import Randomstring from "randomstring";
+import teamModel from "../Modals/teamModel.js";
 dotenv.config();
 
 const sendMail = async (name, email, id, purpose, token) => {
@@ -378,3 +379,47 @@ export const forgotPasswordManager = async (req, res, next) => {
     console.log(error.message);
   }
 };
+
+//----------MANAGER ID FETCHING ------------//
+
+export const managerId = async(req,res,next) => {
+  try {
+    const token = req.headers.authorization.split(' ')?.[1]
+    const claim = Jwt.verify(token,process.env.MANAGERSECRETKEY)
+    const managerId = claim._id
+    if(managerId){
+      res.status(200).json({id:managerId})
+    }else{
+      res.status.json({
+        message:"something went wrong"
+      })
+    }
+     
+  } catch (error) {
+    next(error)
+    console.log(error.message);
+  }
+}
+
+//----------MANAGER ID FETCHING ------------//
+
+export const registerTeams = async(req,res,next) => {
+  try {
+
+    const {id} = req.query
+    const teamsData = await teamModel.find({tournamentId:id})
+    if(teamsData){
+      res.status(200).json(teamsData)
+    }else{
+      res.status.json({
+        message:"something went wrong"
+      })
+    }
+     
+  } catch (error) {
+    next(error)
+    console.log(error.message);
+  }
+}
+
+
