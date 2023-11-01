@@ -29,6 +29,10 @@ const managerScheema = await mongoose.Schema({
     token:{
         type:String,
     },
+    is_google_signup:{
+        type:Boolean,
+        default:false
+    },
 })
 
 const managerModel = mongoose.model('manager',managerScheema);

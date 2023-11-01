@@ -17,7 +17,7 @@ const sendMail = async (name, email, id, purpose, token) => {
   try {
     let content;
     if (purpose == "user verification") {
-      console.log("object");
+      console.log(token,'in email');
       content = ` <html>
             <body>
                 <h1>Soccer Space Account Verification</h1>
@@ -107,7 +107,12 @@ export const userRegister = async (req, res, next) => {
       const result = await user.save();
 
       if (result) {
-        sendMail(result.name, result.email, result._id, "user verification");
+        const token = Randomstring.generate();
+        await userModel.updateOne({ email: email }, { $set: { token: token } });
+        sendMail(result.name, result.email, result._id, "user verification",token);
+        setTimeout(async () => {
+          await userModel.updateOne({ email: email }, { $set: { token: "" } });
+        }, 120000);
         res.json(result);
       } else {
         res.status(400).send({
@@ -727,6 +732,113 @@ const updateStatus = async () => {
   console.log("Status updated successfully");
 };
 
-cron.schedule("0 */5 * * *", () => {
+//----------  SENT MULTIPLE MAIL bEFORE TOURNAMENT------------//
+
+const sendMultipleMail = async (tournamentName, location, emails) => {
+  try {
+
+      emails.forEach(async element => {
+        const user = await userModel.findOne({email:element})
+        const transporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false,
+            requireTLS: true,
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASS,
+            },
+        });
+  
+  
+        const mailOptions = {
+            from: "SOCCER SPACE",
+            to:element ,
+            subject: "For verification mail",
+            html: `<html>
+            <body>
+            <h1>Soccer Space Tournament Alert</h1>
+            <img src="https://t4.ftcdn.net/jpg/04/21/80/35/240_F_421803526_JD00lLJgca3EHwpNUku6PGMS08Do2kZC.jpg" alt="alert Image" width="500" height="300"><br>
+            <p>Hi ${user.name},</p>
+            <p>Tomorrow is your tournament day. Please attend this tournament at the correct location  ${location} on time for ${tournamentName}.</p>
+            <p>If you have any questions or need assistance, please contact our support team.</p>
+            </body>
+            </html>`,
+        };
+  
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log("Email send-->", info.response);
+            }
+        });
+      });
+  } catch (error) {
+      console.log(error.message);
+  }
+};
+
+
+
+
+//---------- AUTOMATICALY SENT MULTIPLE MAIL BEFORE TOURNAMENT------------//
+
+const multipleMailSentBeforeTournament = async () => {
+  const documents = await tournamentModel.find();
+  let emails = [];
+  let teams = [];
+  let tournamentResults = [];
+
+  for (const document of documents) {
+      const tournamentBeforeDay = new Date(document.tournamentDate);
+      tournamentBeforeDay.setDate(tournamentBeforeDay.getDate() - 1);
+
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+
+      if (
+          tournamentBeforeDay.getFullYear() === currentDate.getFullYear() &&
+          tournamentBeforeDay.getMonth() === currentDate.getMonth() &&
+          tournamentBeforeDay.getDate() === currentDate.getDate()
+      ) {
+       
+          teams.push(document.Teams);
+          tournamentResults.push({
+              tournamentName: document.tournamentName,
+              tournamentLocation : document.location
+              
+          });
+      }
+  }
+
+
+  for (const team of teams) {
+      let teamEmails = [];
+      for (const t of team) {
+          try {
+              const userData = await teamModel.findById(t).populate('userId');
+              teamEmails.push(userData.userId.email);
+          } catch (error) {
+              console.error(error);
+          }
+      }
+      emails.push(teamEmails);
+  }
+
+
+  if(emails.length > 0 ){
+    for (let i=0 ;i<emails.length;i++) {
+      sendMultipleMail(tournamentResults[i].tournamentName,tournamentResults[0].tournamentLocation,emails[i])
+    }
+  }
+};
+
+
+
+
+cron.schedule("0 19 * * *", () => {
   updateStatus();
+  multipleMailSentBeforeTournament();
 });
+

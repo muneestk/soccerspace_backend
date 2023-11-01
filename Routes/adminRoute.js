@@ -9,7 +9,7 @@ adminRoute.post('/login',adminLogin)
 
 adminRoute.get('/usersList' , adminAuth , userList)
 adminRoute.get('/managerList' , adminAuth , managerList)
-adminRoute.get('/tournamentsList'  ,adminAuth , tournamentList)
+adminRoute.get('/tournamentsList'  , tournamentList)
 adminRoute.get('/loadDashBoard'  , adminAuth ,loadDashBoard)
 
 adminRoute.patch('/unBlockUser', adminAuth , unBlockUser)

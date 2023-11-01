@@ -380,26 +380,6 @@ export const forgotPasswordManager = async (req, res, next) => {
   }
 };
 
-//----------MANAGER ID FETCHING ------------//
-
-export const managerId = async(req,res,next) => {
-  try {
-    const token = req.headers.authorization.split(' ')?.[1]
-    const claim = Jwt.verify(token,process.env.MANAGERSECRETKEY)
-    const managerId = claim._id
-    if(managerId){
-      res.status(200).json({id:managerId})
-    }else{
-      res.status.json({
-        message:"something went wrong"
-      })
-    }
-     
-  } catch (error) {
-    next(error)
-    console.log(error.message);
-  }
-}
 
 //----------MANAGER ID FETCHING ------------//
 
@@ -423,3 +403,41 @@ export const registerTeams = async(req,res,next) => {
 }
 
 
+//---------- manager GOOGLE SIGNUP REGISTER ------------//
+
+export const googleRegister = async (req, res, next) => {
+  try {
+    
+    const { name, email, id } = req.body;
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(id, salt);
+    const exist = await managerModel.findOne({ email: email });
+
+    if (exist) {
+      await managerModel.updateOne({ email: email }, { is_google_signup: true });
+      const token = Jwt.sign({ _id: exist._id }, process.env.MANAGERSECRETKEY);
+      res.json(token);
+    } else {
+      const manager = new managerModel({
+        name: name,
+        email: email,
+        password: hashedPassword,
+        is_google_signup: true,
+      });
+
+      const result = await manager.save();
+
+      if (result) {
+        const token = Jwt.sign({ _id: result._id }, process.env.MANAGERSECRETKEY);
+        res.json(token);
+      } else {
+        res.status(400).send({
+          message: "Can't registered, Something went wrong",
+        });
+      }
+    }
+  } catch (err) {
+    next(err);
+    console.log(err.message);
+  }
+};

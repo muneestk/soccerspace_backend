@@ -14,7 +14,7 @@ export const userAuth = async (req,res,next) => {
             const user = await userModel.findOne({ _id : decoded._id})
             if(user){
                 
-                next()
+                    next()
             }else{
                 return res.status(400).json({
                     message : "user not authorised invalid user"

@@ -1,5 +1,5 @@
 import express from 'express';
-import { managerLogin, managerRegister, managerVerification, resendOtp, managerDetails, managerEdit, addTournment, forgotMailSentManager, managerId, registerTeams} from '../Controller/managerController.js';
+import { managerLogin, managerRegister, managerVerification, resendOtp, managerDetails, managerEdit, addTournment, forgotMailSentManager, registerTeams, googleRegister} from '../Controller/managerController.js';
 import { ManagerAuth } from '../middleware/Auth.js';
 import multer from 'multer';
 import { fileURLToPath } from 'url';
@@ -56,16 +56,16 @@ managerRoute.post('/reVerifyAccount',forgotMailSentManager)
 managerRoute.post('/register', managerRegister);
 managerRoute.post('/login', managerLogin);
 managerRoute.post('/verification', managerVerification);
+managerRoute.post('/googleLogin', googleRegister);
 managerRoute.post('/resendOtp', resendOtp);
+managerRoute.post('/updateRound',ManagerAuth, roundUpdate);
 managerRoute.post('/addTournment',ManagerAuth, upload.fields([{ name: 'logoImage' }, { name: 'posterImage' }]), addTournment);
 
 managerRoute.get('/managerDetails',ManagerAuth, managerDetails);
-managerRoute.get('/findManger',ManagerAuth, managerId);
-managerRoute.get('/getFixture',ManagerAuth, fixtureFetching);
+managerRoute.get('/getFixture', fixtureFetching);
 managerRoute.get('/registeredTeams',ManagerAuth, registerTeams);
 
 managerRoute.patch('/saveManager',ManagerAuth, managerEdit);
 managerRoute.patch('/updateScore',ManagerAuth, scoreUpdate);
-managerRoute.post('/updateRound',ManagerAuth, roundUpdate);
 
 export default managerRoute;

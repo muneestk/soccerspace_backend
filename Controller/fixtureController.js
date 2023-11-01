@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import fixtureModel from "../Modals/fixtureModel.js";
+import teamModel from "../Modals/teamModel.js";
+import scorerModel from "../Modals/teamScorer.js";
 
 
 
@@ -8,14 +10,12 @@ import fixtureModel from "../Modals/fixtureModel.js";
 export const fixtureFetching = async(req,res,next) => {
     try {
       
-      const {id,round} = req.query
+      const {id} = req.query
       const fixtureData = await fixtureModel.find({ tournamentId: id})
       .populate('matches.team1Id')
       .populate('matches.team2Id')
-      // .populate('matches.winner')
       .populate('tournamentId')
       
-      console.log(fixtureData);
   
       if(fixtureData){
         return res.status(200).json({
@@ -40,9 +40,10 @@ export const fixtureFetching = async(req,res,next) => {
 export const scoreUpdate = async (req, res, next) => {
   try {
 
-    const {team1score,team2score,tournamentId,matchId,winner}= req.body
+    const {form,team}=req.body
+    const {team1score,team2score,tournamentId,matchId,winner}= form
 
-    const updateResult = await fixtureModel.updateOne({tournamentId:tournamentId,
+    const updateResult = await fixtureModel.findOneAndUpdate({tournamentId:tournamentId,
       matches:{
         $elemMatch:{
           _id:matchId
@@ -56,8 +57,73 @@ export const scoreUpdate = async (req, res, next) => {
        "matches.$.matchStatus":"updated",    
       }
     })
-    
+
     if (updateResult) {
+
+      for (const scorer of team) {
+        if (updateResult.matches[0].team1Id == scorer.teamId) {
+
+          const existName = await scorerModel.findOneAndUpdate(
+            { scorerName: scorer.scorername,matchId:matchId,team:"team1" },
+            { $inc: { count : 1 } }
+          );
+
+          if(!existName){
+            const scoreData = new scorerModel({
+                scorerName:scorer.scorername,
+                matchId,
+                team:"team1"
+            })
+            const scoreDataSave = await scoreData.save()
+
+           if (scoreDataSave) {
+              await fixtureModel.findOneAndUpdate(
+                {
+                  tournamentId: tournamentId,
+                  "matches._id": matchId
+                },
+                {
+                  $addToSet: {
+                    "matches.$.team1GoalScorers": scoreDataSave._id
+                  }
+                }
+              );
+            }
+
+          }
+        }else{
+          const existName = await scorerModel.findOneAndUpdate(
+            { scorerName: scorer.scorername,matchId:matchId,team:"team2" },
+            { $inc: { count : 1 } }
+          );
+
+          if(!existName){
+            const scoreData = new scorerModel({
+                scorerName:scorer.scorername,
+                matchId,
+                team:"team2"
+
+            })
+            const scoreDataSave = await scoreData.save()
+
+           if (scoreDataSave) {
+              await fixtureModel.findOneAndUpdate(
+                {
+                  tournamentId: tournamentId,
+                  "matches._id": matchId
+                },
+                {
+                  $addToSet: {
+                    "matches.$.team2GoalScorers": scoreDataSave._id
+                  }
+                }
+              );
+            }
+
+          }
+        }
+      }
+      
       res.status(200).json(updateResult);
     } else {
       res.status(400).json({

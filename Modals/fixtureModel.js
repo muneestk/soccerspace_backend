@@ -42,6 +42,14 @@ const fixtureScheema = await mongoose.Schema({
             type:Number,
             default:0
         },
+        team1GoalScorers:[{
+            type:scheema.Types.ObjectId,
+            ref:'score',
+        }],
+        team2GoalScorers:[{
+            type:scheema.Types.ObjectId,
+            ref:'score',
+        }],
         matchStatus:{
             type : String,
             default : "pending"
