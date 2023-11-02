@@ -60,39 +60,7 @@ export const scoreUpdate = async (req, res, next) => {
       }
     })
    console.log(tournamentId,"is");
-   const data = await scorerModel.find({tournamentId: tournamentId})
-   console.log(data);
-
-
-const tournamentI = new ObjectId(tournamentId);
-
-const topScorerList = await scorerModel.aggregate([
-  {
-    $match: { tournamentId: tournamentI },
-  },
-  {
-    $group: {
-      _id: '$scorerName',
-      totalScore: { $sum: '$count' },
-    },
-  },
-  {
-    $lookup: {
-      from: 'team',
-      localField: 'teamId',
-      foreignField: '_id',
-      as: 'teamDetails',
-    },
-  },
-  { $sort: { totalScore: -1 } },
-])
-
-console.log(topScorerList,'list');
-
-
- 
-
-    
+  
 
     if (updateResult) {
       for (const scorer of team) {
@@ -261,3 +229,51 @@ try {
   console.error(error.message);
 }
 }
+
+//---------- FETCHING SCORECARD ------------//
+
+export const fetchingScorecard = async(req,res,next) => {
+  try {
+  
+    const tournamentId = req.params.id
+    const tournamentI = new ObjectId(tournamentId);
+
+    const topScorerList = await scorerModel.aggregate([
+      {
+        $match: { tournamentId: tournamentI },
+      },
+      {
+        $group: {
+          _id: '$scorerName',
+          totalScore: { $sum: '$count' },
+          teamId: { $first: '$teamId' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'teams',
+          localField: 'teamId',
+          foreignField: '_id',
+          as: 'teamDetails',
+        },
+      },
+      { $sort: { totalScore: -1 } },
+    ]);
+ 
+
+    if(topScorerList){
+      res.status(200).json(topScorerList)
+    }else{
+      res.status(400).json({
+        message:"something went wrong"
+      })    
+    }
+
+    
+  } catch (error) {
+    next(error)
+    console.log(error.message);
+    
+  }
+}
+

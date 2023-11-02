@@ -4,7 +4,7 @@ import { ManagerAuth } from '../middleware/Auth.js';
 import multer from 'multer';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import { fixtureFetching, roundUpdate, scoreUpdate } from '../Controller/fixtureController.js';
+import { fetchingScorecard, fixtureFetching, roundUpdate, scoreUpdate } from '../Controller/fixtureController.js';
 
 const __filename = fileURLToPath(import.meta.url); 
 const __dirname = path.dirname(__filename); 
@@ -64,6 +64,8 @@ managerRoute.post('/addTournment',ManagerAuth, upload.fields([{ name: 'logoImage
 managerRoute.get('/managerDetails',ManagerAuth, managerDetails);
 managerRoute.get('/getFixture', fixtureFetching);
 managerRoute.get('/registeredTeams',ManagerAuth, registerTeams);
+managerRoute.get('/getGoalScorers/:id',ManagerAuth, fetchingScorecard);
+
 
 managerRoute.patch('/saveManager',ManagerAuth, managerEdit);
 managerRoute.patch('/updateScore',ManagerAuth, scoreUpdate);
