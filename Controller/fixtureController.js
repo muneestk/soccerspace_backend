@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import fixtureModel from "../Modals/fixtureModel.js";
-import teamModel from "../Modals/teamModel.js";
 import scorerModel from "../Modals/teamScorer.js";
+import mongoose from 'mongoose';
 
-
+const { ObjectId } = mongoose.Types;
 
 //----------FIXTURE FETCHING ------------//
 
@@ -14,6 +14,8 @@ export const fixtureFetching = async(req,res,next) => {
       const fixtureData = await fixtureModel.find({ tournamentId: id})
       .populate('matches.team1Id')
       .populate('matches.team2Id')
+      .populate('matches.team1GoalScorers')
+      .populate('matches.team2GoalScorers')
       .populate('tournamentId')
       
   
@@ -57,12 +59,53 @@ export const scoreUpdate = async (req, res, next) => {
        "matches.$.matchStatus":"updated",    
       }
     })
+   console.log(tournamentId,"is");
+   const data = await scorerModel.find({tournamentId: tournamentId})
+   console.log(data);
+
+
+const tournamentI = new ObjectId(tournamentId);
+
+const topScorerList = await scorerModel.aggregate([
+  {
+    $match: { tournamentId: tournamentI },
+  },
+  {
+    $group: {
+      _id: '$scorerName',
+      totalScore: { $sum: '$count' },
+    },
+  },
+  {
+    $lookup: {
+      from: 'team',
+      localField: 'teamId',
+      foreignField: '_id',
+      as: 'teamDetails',
+    },
+  },
+  { $sort: { totalScore: -1 } },
+])
+
+console.log(topScorerList,'list');
+
+
+ 
+
+    
 
     if (updateResult) {
-
       for (const scorer of team) {
-        if (updateResult.matches[0].team1Id == scorer.teamId) {
-
+        const check = await fixtureModel.findOne({tournamentId:tournamentId,      
+          matches: {
+            $elemMatch: {
+              team1Id: scorer.teamId,
+              _id: matchId
+            }
+          }
+        });
+        
+        if (check) {
           const existName = await scorerModel.findOneAndUpdate(
             { scorerName: scorer.scorername,matchId:matchId,team:"team1" },
             { $inc: { count : 1 } }
@@ -72,7 +115,9 @@ export const scoreUpdate = async (req, res, next) => {
             const scoreData = new scorerModel({
                 scorerName:scorer.scorername,
                 matchId,
-                team:"team1"
+                team:"team1",
+                tournamentId,
+                teamId:updateResult.matches[0].team1Id
             })
             const scoreDataSave = await scoreData.save()
 
@@ -92,6 +137,7 @@ export const scoreUpdate = async (req, res, next) => {
 
           }
         }else{
+
           const existName = await scorerModel.findOneAndUpdate(
             { scorerName: scorer.scorername,matchId:matchId,team:"team2" },
             { $inc: { count : 1 } }
@@ -101,7 +147,9 @@ export const scoreUpdate = async (req, res, next) => {
             const scoreData = new scorerModel({
                 scorerName:scorer.scorername,
                 matchId,
-                team:"team2"
+                team:"team2",
+                tournamentId,
+                teamId:updateResult.matches[0].team2Id
 
             })
             const scoreDataSave = await scoreData.save()
