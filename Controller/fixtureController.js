@@ -17,11 +17,35 @@ export const fixtureFetching = async(req,res,next) => {
       .populate('matches.team1GoalScorers')
       .populate('matches.team2GoalScorers')
       .populate('tournamentId')
+
+      const tournamentI = new ObjectId(id);
+
+    const topScorerList = await scorerModel.aggregate([
+      {
+        $match: { tournamentId: tournamentI },
+      },
+      {
+        $group: {
+          _id: '$scorerName',
+          totalScore: { $sum: '$count' },
+          teamId: { $first: '$teamId' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'teams',
+          localField: 'teamId',
+          foreignField: '_id',
+          as: 'teamDetails',
+        },
+      },
+      { $sort: { totalScore: -1 } },
+    ]);
+ 
       
-  
       if(fixtureData){
         return res.status(200).json({
-           fixtureData
+           fixtureData,topScorerList
         })
       }else{
         return res.status(400).json({
@@ -59,7 +83,6 @@ export const scoreUpdate = async (req, res, next) => {
        "matches.$.matchStatus":"updated",    
       }
     })
-   console.log(tournamentId,"is");
   
 
     if (updateResult) {
