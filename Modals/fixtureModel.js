@@ -5,7 +5,7 @@ const scheema = mongoose.Schema
 
 const fixtureScheema = await mongoose.Schema({
 
-    tournamentId:{
+    tournamentId:{  
         type:scheema.Types.ObjectId,
         ref:'tournament',
         required:true

@@ -424,7 +424,8 @@ export const googleRegister = async (req, res, next) => {
         password: hashedPassword,
         is_google_signup: true,
       });
-
+   
+      const g =555
       const result = await manager.save();
 
       if (result) {

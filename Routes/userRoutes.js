@@ -3,6 +3,7 @@ const userRoute = express();
 import { userAuth } from '../middleware/Auth.js';
 import { userRegister, userLogin, Verification, userDetails, userSave, googleRegister, teamRegister, verifyPayment, forgotMailSent, forgotPassword, reverificationMailSent, myTournaments, myTournamentsTeams, tournamentData, Searchtournament, filtertournament } from '../Controller/userController.js'; 
 import { upload } from '../middleware/multer.js';
+import { chatConnection } from '../Controller/chatController.js';
 
 userRoute.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
@@ -24,6 +25,9 @@ userRoute.post('/reVerifyAccount',reverificationMailSent)
 userRoute.post('/userSave', userAuth, userSave)
 userRoute.post('/verifyPayment', userAuth, verifyPayment)
 userRoute.post('/registerTournament', userAuth,upload.single('logoImage'), teamRegister)
+
+
+userRoute.post('/chatConnect', chatConnection)
 
 userRoute.patch('/forgotPassword',forgotPassword) 
 
