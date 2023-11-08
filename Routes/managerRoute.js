@@ -5,6 +5,7 @@ import multer from 'multer';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { fetchingScorecard, fixtureFetching, roundUpdate, scoreUpdate } from '../Controller/fixtureController.js';
+import { getManagerChatLIst, getManagerFullChat, sentMessage } from '../Controller/chatController.js';
 
 const __filename = fileURLToPath(import.meta.url); 
 const __dirname = path.dirname(__filename); 
@@ -65,6 +66,12 @@ managerRoute.get('/managerDetails',ManagerAuth, managerDetails);
 managerRoute.get('/getFixture', fixtureFetching);
 managerRoute.get('/registeredTeams',ManagerAuth, registerTeams);
 managerRoute.get('/getGoalScorers/:id',ManagerAuth, fetchingScorecard);
+
+
+managerRoute.get('/getChatLIst',ManagerAuth, getManagerChatLIst)
+managerRoute.get('/getFullChat',ManagerAuth, getManagerFullChat)
+managerRoute.post('/sentMessage',ManagerAuth, sentMessage)
+
 
 
 managerRoute.patch('/saveManager',ManagerAuth, managerEdit);

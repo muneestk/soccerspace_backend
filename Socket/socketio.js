@@ -9,18 +9,20 @@ function initializeSocket(server) {
     });
 
     io.on('connection', (socket) => {
-        socket.on('setup', (is) => {
+        socket.on('setup', (id) => {
             socket.join(id);
             socket.emit('connected');
             console.log('a user connected');
         });
 
         socket.on('join', (room) => {
+            console.log(room,'join');
             socket.join(room);
         });
 
         socket.on('chatMessage', (message) => {
-            console.log(message, 'message');
+            console.log(message,'in socket');
+            io.to(message.to).emit("messageReceived", message);
         });
 
         socket.on('disconnect', () => {
