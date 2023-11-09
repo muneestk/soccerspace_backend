@@ -18,7 +18,7 @@ const io = new Server(http);
 
 app.use(cors({
     credentials:true,
-    origin:['http://localhost:4200']
+    origin:['http://localhost:4200','https://soccerspace-frontent-mfub.vercel.app']
 }));
 
 app.use(cookieParser());
