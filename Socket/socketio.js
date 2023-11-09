@@ -4,7 +4,7 @@ function initializeSocket(server) {
     const io = new Server(server, {
         pingTimeout: 60000,
         cors: {
-            origin: "http://localhost:4200"
+            origin:[ "http://localhost:4200","https://soccerspace-frontent-mfub.vercel.app"]
         }
     });
 
@@ -22,7 +22,8 @@ function initializeSocket(server) {
 
         socket.on('chatMessage', (message) => {
             console.log(message,'in socket');
-            io.to(message.to).emit("messageReceived", message);
+            io.in(message.to).emit("messageReceived", message);
+            console.log("message gone");
         });
 
         socket.on('disconnect', () => {
