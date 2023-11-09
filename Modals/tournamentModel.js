@@ -80,10 +80,7 @@ const tournamentScheema = await mongoose.Schema({
          type: scheema.Types.ObjectId ,
          ref:"team"
      }],
-     maxRegLimit:{
-        type:Number,
-        default:0
-    },
+  
 
    
    
