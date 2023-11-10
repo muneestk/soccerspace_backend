@@ -394,7 +394,7 @@ export const teamRegister = async (req, res, next) => {
     const tournamentData = await tournamentModel.findById(tournamentId);
 
 
-    if (tournamentData.limit > tournamentData.Teams.length) {
+    if (tournamentData.limit >= tournamentData.Teams.length) {
       return res.status(400).json({
         message: "sorry tournament slot is full",
       });
