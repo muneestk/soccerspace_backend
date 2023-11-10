@@ -34,6 +34,7 @@ app.use((req,res,next) =>{
 
 
 app.use('/files',express.static('Files'));
+
 app.use('/',userRoute);
 app.use('/admin',adminRoute);
 app.use('/manager',managerRoute);

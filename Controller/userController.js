@@ -17,7 +17,6 @@ const sendMail = async (name, email, id, purpose, token) => {
   try {
     let content;
     if (purpose == "user verification") {
-      console.log(token,'in email');
       content = ` <html>
             <body>
                 <h1>Soccer Space Account Verification</h1>
@@ -131,7 +130,6 @@ export const userRegister = async (req, res, next) => {
 export const googleRegister = async (req, res, next) => {
   try {
     const { name, email, id } = req.body;
-    console.log(req.body);
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(id, salt);
     const exist = await userModel.findOne({ email: email });
