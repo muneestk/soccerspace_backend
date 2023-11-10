@@ -25,7 +25,7 @@ const sendMail = async (name, email, id, purpose, token) => {
               
                     <img src="https://nordvpn.com/wp-content/uploads/blog-social-nordpass-password-manager-1200x628-1.png" alt="Verification Image" width="500" height="300"><br>
                     <div style="text-align: center;">
-                    <a href="http://localhost:4200/manager/forgotpassword/${id}/${token}" style="text-decoration: none;">
+                    <a href="https://soccerspace-frontent-mfub.vercel.app/manager/forgotpassword/${id}/${token}" style="text-decoration: none;">
                         <button style="background-color: #008CBA; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
                             Resubmit  password
                         </button>

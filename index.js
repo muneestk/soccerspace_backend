@@ -3,17 +3,16 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { Server } from 'socket.io';
 const app = express();
 import { createServer } from 'http';
 const http = createServer(app);
 import userRoute from './Routes/userRoutes.js';
 import managerRoute from './Routes/managerRoute.js';
 import adminRoute from './Routes/adminRoute.js';
-import initializeSocket  from './Socket/socketio.js';
+import { Server } from 'socket.io';
+
 
 dotenv.config();
-const io = new Server(http);
 
 
 app.use(cors({
@@ -41,18 +40,46 @@ app.use('/manager',managerRoute);
 
 
 mongoose.connect(process.env.MONGO, {
-    useNewUrlParser:true,
-    useUnifiedTopology:true
-}).then(() =>{
-    console.log('database connected succesfully');
-});
-
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  }).then(() => {
+    console.log('Database connected successfully');
+  }).catch((error) => {
+    console.error('Error connecting to MongoDB:', error);
+  });
 
  const server = http.listen(process.env.PORT,()=>{
     console.log("Server started listening to port");
 });
 
-initializeSocket(server)
 
+const io = new Server(server, {
+    pingTimeout: 60000,
+    cors: {
+        origins:[ "http://localhost:4200","https://soccerspace-frontent-mfub.vercel.app"]
+    }
+});
+
+io.on('connection', (socket) => {
+    socket.on('setup', (id) => {    
+        console.log('a user connected');
+    });
+
+    socket.on('join', (room) => {
+        socket.join(room);
+        socket.to(room).emit('emit-joined')
+    });
+
+    socket.on('chatMessage', (message) => {
+        io.to(message.connection).emit("messageRecieved", message);
+   
+    });
+
+    socket.on('disconnect', () => {
+        console.log(socket);
+        console.log('user is disconnected');
+    });
+});
+    
 
   
