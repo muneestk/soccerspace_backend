@@ -90,40 +90,24 @@ export const tournamentList = async(req,res,next) => {
 
 export const loadDashBoard = async (req, res, next) => {
     try {
-        const tournamentData = await tournamentModel.find({ is_approuve: 'approved' });
-
-        const eightWeeksAgo = new Date();
-        eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56); // 8 weeks * 7 days
-
-        const today = new Date();
-
-        const weeklySales = await tournamentModel.aggregate([
+        
+        const playersData = await tournamentModel.aggregate([
             {
                 $match: {
-                    is_approuve: 'approved',
-                    registeredDate: { $gte: eightWeeksAgo, $lte: today },
-                },
+                    is_approuve: { $ne: "waiting" }
+                }
             },
             {
                 $group: {
-                    _id: {
-                        $week: '$registeredDate',
-                    },
-                    totalFee: { $sum: { $multiply: ['$registerFee', { $size: '$Teams' }] } },
-                },
-            },
-            {
-                $project: {
-                    week: { $concat: ['week', { $toString: '$_id' }] },
-                    totalFee: 1,
-                    _id: 0,
-                },
-            },
-            
+                    _id: "$players", 
+                    count: { $sum: 1 } 
+                }
+            }
         ]);
+        
+        console.log(playersData);
 
-
-        res.status(200).json(weeklySales);
+        res.status(200).json(playersData);
     } catch (error) {
         next(error);
         console.log(error.message);

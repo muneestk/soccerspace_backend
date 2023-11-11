@@ -41,7 +41,8 @@ app.use('/manager',managerRoute);
 
 mongoose.connect(process.env.MONGO, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useCreateIndex: true
   }).then(() => {
     console.log('Database connected successfully');
   }).catch((error) => {

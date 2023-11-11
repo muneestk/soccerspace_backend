@@ -669,7 +669,6 @@ export const filtertournament = async (req, res, next) => {
       query.limit = catogory;
     }
 
-    console.log(query);
 
     const tournamentDetails = await tournamentModel
       .find(query)

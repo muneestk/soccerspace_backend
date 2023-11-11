@@ -107,8 +107,16 @@ export const getManagerChatLIst = async(req,res,next) =>{
     const token = req.headers.authorization?.split(" ")[1];
     const claim = jwt.verify(token, process.env.MANAGERSECRETKEY);
     const id = claim._id;
+    const { search } = req.query;
+    let query = { "connections.manager": id };
 
-    const managerContact = await connectionModel.find({"connections.manager":id}).populate('connections.user')
+// if (search) {
+//     query['connections.manager'] = { $regex: search, $options: "i" };
+// }
+
+const managerContact = await connectionModel.find(query).populate('connections.user');
+    
+    
     res.status(200).json({
     managerContact,
     managerId:id
