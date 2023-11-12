@@ -134,6 +134,12 @@ export const googleRegister = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(id, salt);
     const exist = await userModel.findOne({ email: email });
 
+    if (exist.is_blocked) {
+      return res.status(404).send({
+        message: "This app has been blocked by  administrator",
+      });
+    }
+
     if (exist) {
       await userModel.updateOne({ email: email }, { is_google_signup: true });
       const token = jwt.sign({ _id: exist._id }, process.env.USERSECRETKEY);

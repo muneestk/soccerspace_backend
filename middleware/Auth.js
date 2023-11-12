@@ -12,15 +12,21 @@ export const userAuth = async (req,res,next) => {
             let token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token,process.env.USERSECRETKEY)
             const user = await userModel.findOne({ _id : decoded._id})
-            if(user){             
+            if(user){ 
+                if(user.is_blocked){
+                    return res.status(403).json({
+                        message : "you are blocked"
+                       }) 
+                }else{
                     next()
+                }          
             }else{
-                return res.status(400).json({
+                return res.status(401).json({
                     message : "user not authorised invalid user"
                    })  
             }
         }else{
-           return res.status(400).json({
+           return res.status(401).json({
             message : "user not authorised"
            })
         }
@@ -65,14 +71,19 @@ export const ManagerAuth = async (req,res,next) => {
             const decoded = jwt.verify(token,process.env.MANAGERSECRETKEY)
             const manager = await managerModel.findOne({ _id : decoded._id})
             if(manager){
+                if(manager.is_blocked){
+                    return res.status(403).json({
+                        message : "you are blocked"
+                       }) 
+                }
                 next()
             }else{
-                return res.status(400).json({
+                return res.status(401).json({
                     message : "manager not authorised invalid manager"
                    })  
             }
         }else{
-           return res.status(400).json({
+           return res.status(401).json({
             message : "manager not authorised"
            })
         }
